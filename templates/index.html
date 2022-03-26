@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Troovel - Carte interactive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+            href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700"
+            rel="stylesheet"
+    />
+    <!-- Mapbox GL JS -->
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
+    <link
+            href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css"
+            rel="stylesheet"
+    />
+    <!-- Geocoder plugin -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js"></script>
+    <link
+            rel="stylesheet"
+            href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.css"
+            type="text/css"
+    />
+    <!-- Turf.js plugin -->
+    <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+    <link href="https://cdn.lineicons.com/3.0/lineicons.css" rel="stylesheet">
+    <style>
+        body {
+            color: #404040;
+            font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .sidebar {
+            position: absolute;
+            width: 33.3333%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            border-right: 1px solid rgba(0, 0, 0, 0.25);
+        }
+        .pad2 {
+            padding: 20px;
+        }
+
+        .map {
+            position: absolute;
+            left: 33.3333%;
+            width: 66.6666%;
+            top: 0;
+            bottom: 0;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 400;
+            line-height: 20px;
+            padding: 20px 2px;
+        }
+
+        a {
+            color: #404040;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #101010;
+        }
+
+        .heading {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            min-height: 60px;
+            line-height: 60px;
+            padding: 0 10px;
+            background-color: #0c2d48;
+            color: #fff;
+        }
+
+        .listings {
+            height: 100%;
+            overflow: auto;
+            padding-bottom: 60px;
+        }
+
+        .listings .item {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .listings .item:last-child {
+            border-bottom: none;
+        }
+        .listings .item .title {
+            display: block;
+            color: #0c2d48;
+            font-weight: 700;
+        }
+
+        .listings .item .title small {
+            font-weight: 400;
+        }
+        .listings .item.active .title,
+        .listings .item .title:hover {
+            color: #13497a;
+        }
+        .listings .item.active {
+            background-color: #f8f8f8;
+        }
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+            border-left: 0;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-track {
+            background: none;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0c2d48;
+            border-radius: 0;
+        }
+
+        .marker {
+            cursor: pointer;
+            height: 36px;
+            width: 36px;
+            background-color: #13497a;
+            border-radius: 100%;
+            border: #ffff 4px solid;
+        }
+
+        .mapboxgl-popup {
+            padding-bottom: 50px;
+        }
+
+        .mapboxgl-popup-close-button {
+            display: none;
+        }
+        .mapboxgl-popup-content {
+            font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', sans-serif;
+            padding: 0;
+            width: 180px;
+        }
+
+        .mapboxgl-popup-content h3 {
+            background: #0c2d48;
+            color: #fff;
+            margin: -15px 0 0;
+            padding: 10px;
+            border-radius: 3px 3px 0 0;
+            font-weight: 700;
+        }
+
+        .mapboxgl-popup-content h4 {
+            margin: 0;
+            padding: 10px;
+            font-weight: 400;
+        }
+
+        .mapboxgl-popup-content div {
+            padding: 10px;
+        }
+
+        .mapboxgl-popup-anchor-top > .mapboxgl-popup-content {
+            margin-top: 15px;
+        }
+
+        .mapboxgl-popup-anchor-top > .mapboxgl-popup-tip {
+            border-bottom-color: #0c2d48;
+        }
+
+        .mapboxgl-ctrl-geocoder {
+            border-radius: 0;
+            position: relative;
+            top: 0;
+            width: 800px;
+            margin-top: 0;
+            border: 0;
+        }
+
+        .mapboxgl-ctrl-geocoder > div {
+            min-width: 100%;
+            margin-left: 0;
+        }
+
+        .categorie-store {
+            display: inline-block;
+            padding: .35em .65em;
+            font-size: .75em;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            background: #0c2d48;
+        }
+
+        .geocoder {
+            margin-bottom: .5em;
+        }
+
+        .long-distance {
+            color: red
+        }
+
+        .list-heading {
+            margin-left: .5em;
+        }
+
+      
+        #path-btn {
+            display: inline-block;
+            padding: .35em .65em;
+            font-size: .75em;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            background: #0c2d48;
+            border-radius: .5em;
+            visibility: collapse;
+        }
+
+        .active > div > #path-btn {
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="heading">
+        <h1>Choisir un lieu de départ</h1>
+        <div id="geocoder" class="geocoder"></div>
+    </div>
+    <div id="listings" class="listings">
+        <h1 class="list-heading">Choisir un lieu d'arrivée</h1>
+    </div>
+</div>
+<div id="map" class="map"></div>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYXJjaWtlIiwiYSI6ImNrb2lxNTFzZTFpNTIycHM5NG9pbWY2MHMifQ.wy3dBo7cch75Nc8yDR2u-Q';
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v10',
+        center: [-1.209363,48.118949],
+        zoom: 13,
+        scrollZoom: true
+    });
+
+    map.addControl(
+        new mapboxgl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            trackUserLocation: true,
+            showUserHeading: true
+        })
+    );
+
+    const stores = {
+        'type': 'FeatureCollection',
+        'features': [
+            {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-1.205640, 48.114510]
+                },
+                'properties': {
+                    'title': 'Espace Culturel Leclerc',
+                    'address': '5 Rue Du Mee, 35500 Vitré',
+                    'categorie': 'Librairie'
+                }
+            },
+          
+            {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-1.203950, 48.114940]
+                },
+                'properties': {
+                    'title': 'Camping municipal de Saint-Étienne',
+                    'address': '09 Boulevard des Rochers, 35500 Vitré',
+                    'categorie': 'Camping'
+                }
+            },
+        ]
+    };
+
+    stores.features.forEach((store, i) => {
+        store.properties.id = i;
+    });
+
+    map.on('load', () => {
+        map.addSource('places', {
+            'type': 'geojson',
+            'data': stores
+        });
+
+        const geocoder = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            marker: true,
+            placeholder: 'Point de départ',
+            bbox: [-1.249502,48.074802,-1.144656,48.146214]
+        });
+
+        buildLocationList(stores);
+        document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+        addMarkers();
+
+        geocoder.on('result', (event) => {
+            const searchResult = event.result.geometry;
+
+          
+            const options = { units: 'miles' };
+            for (const store of stores.features) {
+                store.properties.distance = turf.distance(
+                    searchResult,
+                    store.geometry,
+                    options
+                );
+
+                store.properties.geocode = searchResult
+            }
+
+            stores.features.sort((a, b) => {
+                if (a.properties.distance > b.properties.distance) {
+                    return 1;
+                }
+                if (a.properties.distance < b.properties.distance) {
+                    return -1;
+                }
+                return 0; // a must be equal to b
+            });
+
+
+            const listings = document.getElementById('listings');
+            while (listings.firstChild) {
+                listings.removeChild(listings.firstChild);
+            }
+            buildLocationList(stores);
+
+            createPopUp(stores.features[0]);
+
+            const activeListing = document.getElementById(
+                `listing-${stores.features[0].properties.id}`
+            );
+            activeListing.classList.add('active');
+
+            const bbox = getBbox(stores, 0, searchResult);
+            map.fitBounds(bbox, {
+                padding: 100
+            });
+        });
+    });
+
+    function getBbox(sortedStores, storeIdentifier, searchResult) {
+        const lats = [
+            sortedStores.features[storeIdentifier].geometry.coordinates[1],
+            searchResult.coordinates[1]
+        ];
+        const lons = [
+            sortedStores.features[storeIdentifier].geometry.coordinates[0],
+            searchResult.coordinates[0]
+        ];
+        const sortedLons = lons.sort((a, b) => {
+            if (a > b) {
+                return 1;
+            }
+            if (a.distance < b.distance) {
+                return -1;
+            }
+            return 0;
+        });
+        const sortedLats = lats.sort((a, b) => {
+            if (a > b) {
+                return 1;
+            }
+            if (a.distance < b.distance) {
+                return -1;
+            }
+            return 0;
+        });
+        return [
+            [sortedLons[0], sortedLats[0]],
+            [sortedLons[1], sortedLats[1]]
+        ];
+    }
+
+    function addMarkers() {
+        for (const marker of stores.features) {
+            const el = document.createElement('div');
+            el.id = `marker-${marker.properties.id}`;
+            el.className = 'marker';
+
+            new mapboxgl.Marker(el, { offset: [0, -23] })
+                .setLngLat(marker.geometry.coordinates)
+                .addTo(map);
+
+            el.addEventListener('click', (e) => {
+                flyToStore(marker);
+                createPopUp(marker);
+                const activeItem = document.getElementsByClassName('active');
+                e.stopPropagation();
+                if (activeItem[0]) {
+                    activeItem[0].classList.remove('active');
+                }
+                const listing = document.getElementById(
+                    `listing-${marker.properties.id}`
+                );
+                listing.classList.add('active');
+            });
+        }
+    }
+
+    function buildLocationList(stores) {
+        for (const store of stores.features) {
+            const listings = document.getElementById('listings');
+            const listing = listings.appendChild(document.createElement('div'));
+            listing.id = `listing-${store.properties.id}`;
+            listing.className = 'item';
+
+            const link = listing.appendChild(document.createElement('a'));
+            link.href = '#';
+            link.className = 'title';
+            link.id = `link-${store.properties.id}`;
+            link.innerHTML = `${store.properties.title} <span class="categorie-store">${store.properties.categorie}</span>`;
+
+            const details = listing.appendChild(document.createElement('div'));
+            details.innerHTML = `${store.properties.address}`;
+            if (store.properties.distance) {
+                const roundedDistance = Math.round(store.properties.distance * 100 * 1.609) / 100;
+                details.innerHTML += `<div><strong>${roundedDistance} km</strong></div>`;
+                if (roundedDistance > 1) {
+                    details.innerHTML += `<div class="long-distance"><i class="lni lni-warning"></i>Longue distance <i class="lni lni-warning"></i> Il est conseiller de prendre les transports en commun</div>`;
+                }
+            }
+
+            if (store.properties.distance) {
+              details.innerHTML += `<button id="path-btn" onClick="openPath(${store.properties.geocode.coordinates}, ${store.geometry.coordinates})"> S\'y rendre</button>`
+            }
+
+
+            link.addEventListener('click', function () {
+                for (const feature of stores.features) {
+                    if (this.id === `link-${feature.properties.id}`) {
+                        flyToStore(feature);
+                        createPopUp(feature);
+                    }
+                }
+                const activeItem = document.getElementsByClassName('active');
+                if (activeItem[0]) {
+                    activeItem[0].classList.remove('active');
+                }
+                this.parentNode.classList.add('active');
+            });
+        }
+    }
+
+    function flyToStore(currentFeature) {
+        map.flyTo({
+            center: currentFeature.geometry.coordinates,
+            zoom: 15
+        });
+    }
+
+    function createPopUp(currentFeature) {
+        const popUps = document.getElementsByClassName('mapboxgl-popup');
+        if (popUps[0]) popUps[0].remove();
+
+        const popup = new mapboxgl.Popup({ closeOnClick: false })
+            .setLngLat(currentFeature.geometry.coordinates)
+            .setHTML(
+                `<h3>${currentFeature.properties.title}</h3><h4>${currentFeature.properties.address}</h4>`
+            )
+            .addTo(map);
+    }
+
+    function openPath(a, b, c, d) {
+      window.open(`https://map.troovel.gq/path/${a}/${b}/${c}/${d}`);
+    }
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 ## Lien important : 
 - Map intéractif https://map.troovel.gq
-- Page de status des différents services https://map.troovel.gq
+- Page de status des différents services https://stats.uptimerobot.com/p9vwMIzvKN
 
 
 ## Guide d'utilisation

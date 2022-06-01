@@ -24,6 +24,10 @@
     <!-- Turf.js plugin -->
     <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
     <link href="https://cdn.lineicons.com/3.0/lineicons.css" rel="stylesheet">
+
+  <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             color: #404040;
@@ -35,6 +39,8 @@
 
         * {
             box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
         }
 
         .sidebar {
@@ -211,9 +217,9 @@
         }
 
         .long-distance {
-            color: red
+            color: red;
+            display: none;
         }
-
         .list-heading {
             margin-left: .5em;
         }
@@ -231,11 +237,66 @@
             vertical-align: baseline;
             background: #0c2d48;
             border-radius: .5em;
-            visibility: collapse;
+            display: none;
+        }
+
+      
+        #transports-btn {
+            display: inline-block;
+            padding: .35em .65em;
+            font-size: .75em;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            background: #0c2d48;
+            border-radius: .5em;
+            display: none;
         }
 
         .active > div > #path-btn {
-            visibility: visible;
+            display: flex;
+        }
+      
+        .active > div > #transports-btn {
+            display: flex;
+        }
+
+        .active > div > .long-distance {
+          display: block;
+        }
+
+        .disabled-proximity {
+          display: none;
+        }
+
+        .listings .item:last-child {
+          margin-bottom: 15px;
+        }
+
+        .loginbtn {
+            display: inline-block;
+            padding: .35em .65em;
+            font-size: .75em;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            background: #0c2d48;
+            border-radius: .5em;
+        }
+        #loginpanel {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 250px;
+          height: 100px;
+          background-color: #0c2d48;
+          border-radius: 5px;
         }
     </style>
 </head>
@@ -250,12 +311,16 @@
     </div>
 </div>
 <div id="map" class="map"></div>
+  <div id="loginpanel">
+    <button id="btn-login" class="loginbtn">Login</button>
+      <button id="btn-logout" class="loginbtn">Logout</button>
+  </div>
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiYXJjaWtlIiwiYSI6ImNrb2lxNTFzZTFpNTIycHM5NG9pbWY2MHMifQ.wy3dBo7cch75Nc8yDR2u-Q';
 
     const map = new mapboxgl.Map({
         container: 'map',
-        style: 'mapbox://styles/mapbox/light-v10',
+        style: 'mapbox://styles/mapbox/streets-v10',
         center: [-1.209363,48.118949],
         zoom: 13,
         scrollZoom: true
@@ -266,41 +331,214 @@
             positionOptions: {
                 enableHighAccuracy: true
             },
-            trackUserLocation: true,
             showUserHeading: true
         })
     );
 
-    const stores = {
-        'type': 'FeatureCollection',
-        'features': [
-            {
-                'type': 'Feature',
-                'geometry': {
-                    'type': 'Point',
-                    'coordinates': [-1.205640, 48.114510]
-                },
-                'properties': {
-                    'title': 'Espace Culturel Leclerc',
-                    'address': '5 Rue Du Mee, 35500 Vitré',
-                    'categorie': 'Librairie'
-                }
-            },
-          
-            {
-                'type': 'Feature',
-                'geometry': {
-                    'type': 'Point',
-                    'coordinates': [-1.203950, 48.114940]
-                },
-                'properties': {
-                    'title': 'Camping municipal de Saint-Étienne',
-                    'address': '09 Boulevard des Rochers, 35500 Vitré',
-                    'categorie': 'Camping'
-                }
-            },
+    const stores = 
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Espace Culturel E.Leclerc",
+        "adresse": "Adresse : Rue du Mée, 35500 Vitré",
+        "categorie": "Librairie"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.204901933670044,
+          48.11472365381236
         ]
-    };
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Pharmacie E.Leclerc",
+        "adresse": "Adresse : Rue du Mée, 35500 Vitré",
+        "categorie": "Pharmacie"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2058889865875244,
+          48.11520357348612
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Parapharmacie E.Leclerc",
+        "adresse": "Adresse : Rue du Mée, 35500 Vitré",
+        "categorie": "Parapharmacie"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2048804759979248,
+          48.114924217803306
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Centre commercial E.Leclerc",
+        "adresse": "Adresse : Rue du Mée, 35500 Vitré",
+        "categorie": "Commerce"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2052452564239502,
+          48.115210736432374
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Centre commercial Hyper U",
+        "adresse": "Adresse : 21 Rue de Redon, 35500 Vitré",
+        "categorie": "Commerce"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2111595273017883,
+          48.11133543664667
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Centre commercial Intermarché",
+        "adresse": "Adresse : 1 Rue de Domalain, 35500 Vitré",
+        "categorie": "Commerce"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2138819694519043,
+          48.107603124918114
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Château de Vitré",
+        "adresse": "Adresse : Place du Château, 35500 Vitré",
+        "categorie": "Tourisme"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.21498703956604,
+          48.124414297302536
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Restaurant l'Espérance",
+        "adresse": "Adresse : 21 Bd des Rochers, 35500 Vitré",
+        "categorie": "Restauration"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2053847312927246,
+          48.120546853905076
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Cinéma l'Aurore",
+        "adresse": "Adresse : 19 Bd de Laval, 35500 Vitré",
+        "categorie": "Divertissement"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2004441022872925,
+          48.12418870443488
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Centre Hospitalier Simone Veil",
+        "adresse": "Adresse : 30 Rue de Rennes, 35500 Vitré",
+        "categorie": "Santé"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.2267136573791504,
+          48.122960459218085
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#7e7e7e",
+        "marker-size": "medium",
+        "marker-symbol": "",
+        "title": "Gare SNCF",
+        "adresse": "Adresse : 5 Place du Général de Gaulle, 35500 Vitré",
+        "categorie": "Transports"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.212068796157837,
+          48.12253074550183
+        ]
+      }
+    }
+  ]
+};
 
     stores.features.forEach((store, i) => {
         store.properties.id = i;
@@ -443,12 +681,16 @@
             link.innerHTML = `${store.properties.title} <span class="categorie-store">${store.properties.categorie}</span>`;
 
             const details = listing.appendChild(document.createElement('div'));
-            details.innerHTML = `${store.properties.address}`;
+            if (store.properties.adresse) {
+              details.innerHTML = `${store.properties.adresse}`;
+            }
+    
             if (store.properties.distance) {
                 const roundedDistance = Math.round(store.properties.distance * 100 * 1.609) / 100;
                 details.innerHTML += `<div><strong>${roundedDistance} km</strong></div>`;
                 if (roundedDistance > 1) {
                     details.innerHTML += `<div class="long-distance"><i class="lni lni-warning"></i>Longue distance <i class="lni lni-warning"></i> Il est conseiller de prendre les transports en commun</div>`;
+                  details.innerHTML += `<button onClick="openVitoBus()" id="transports-btn">Horaire des transports</button>`;
                 }
             }
 
@@ -487,7 +729,7 @@
         const popup = new mapboxgl.Popup({ closeOnClick: false })
             .setLngLat(currentFeature.geometry.coordinates)
             .setHTML(
-                `<h3>${currentFeature.properties.title}</h3><h4>${currentFeature.properties.address}</h4>`
+                `<h3>${currentFeature.properties.title}</h3><h4>${currentFeature.properties.adresse}</h4>`
             )
             .addTo(map);
     }
@@ -495,6 +737,54 @@
     function openPath(a, b, c, d) {
       window.open(`https://map.troovel.gq/path/${a}/${b}/${c}/${d}`);
     }
+
+    function openVitoBus() { window.open("https://pksakwpvitewstatweb.z6.web.core.windows.net/les-horaires-vitobus")
+    }
 </script>
+<script>
+
+    const serverUrl = "https://ynxef7bnorq4.usemoralis.com:2053/server";
+    const appId = "3zcgZ9rsrJjwChyaOHEKrUexr20bQpid3Qkl7n6e";
+    Moralis.start({ serverUrl, appId });
+    
+    async function login() {
+      let user = Moralis.User.current();
+      if (!user) {
+      user = await Moralis.authenticate({
+        signingMessage: "Log in using Moralis",
+      })
+        .then(function (user) {
+          Swal.fire("logged in user:", user);
+          Swal.fire(user.get("ethAddress"));
+        })
+        .catch(function (error) {
+          Swal.fire(error);
+        });
+      }
+    }
+    
+    async function logOut() {
+      Swal.fire({
+        title: 'Are you sure?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Moralis.User.logOut();
+          Swal.fire(
+            'Logout!',
+            'Succesfull',
+            'success'
+          )
+        }
+      })
+    }
+    
+    document.getElementById("btn-login").onclick = login;
+    document.getElementById("btn-logout").onclick = logOut;
+  </script>
 </body>
 </html>
